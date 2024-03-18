@@ -12,8 +12,10 @@
 #![no_std]
 #![no_main]
 #![feature(panic_info_message)]
+#![feature(asm_const)]
+#![feature(naked_functions)]
 
-use core::arch::global_asm;
+use core::arch::{asm, global_asm};
 
 #[macro_use]
 mod console;
@@ -32,6 +34,33 @@ pub fn clear_bss() {
     }
     (sbss as usize..ebss as usize).for_each(|a| unsafe { (a as *mut u8).write_volatile(0) });
 }
+
+const BOOTLOADER_STACK_SIZE: usize = 4096;
+const CPUS: usize = 1;
+
+#[link_section = ".bss.stack"]
+static mut BOOTLOADER_STACK_SPACE: [[u8; BOOTLOADER_STACK_SIZE]; CPUS] =
+    [[0; BOOTLOADER_STACK_SIZE]; CPUS];
+
+
+// #[naked]
+// #[no_mangle]
+// #[link_section = ".text.entry"]
+// unsafe extern "C" fn _start() {
+//     asm!(
+//         "la sp, {bootloader_stack}",
+//         "li t0, {bootloader_stack_size}",
+//         "csrr t1, mhartid",
+//         "addi t1, t1, 1",
+//         "mul t0, t0, t1",
+//         "add sp, sp, t0",
+//         "j {rust_start}",
+//         bootloader_stack = sym BOOTLOADER_STACK_SPACE,
+//         bootloader_stack_size = const BOOTLOADER_STACK_SIZE,
+//         rust_start = sym rust_main,
+//         options(noreturn),
+//     );
+// }
 
 /// the rust entry-point of os
 #[no_mangle]
@@ -59,7 +88,7 @@ pub fn rust_main() -> ! {
     //  );
     // println!(".bss [{:#x}, {:#x})", sbss as usize, ebss as usize);
     
-    // QEMU_EXIT_HANDLE.exit_success();  //need successful qemu exit
+    QEMU_EXIT_HANDLE.exit_success();  //need successful qemu exit
     //QEMU_EXIT_HANDLE.exit_failure(); //need failed qemu exit
-    panic!("Shutdown machine!");
+    // panic!("Shutdown machine!");
 }

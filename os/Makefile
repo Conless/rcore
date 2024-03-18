@@ -1,6 +1,6 @@
 # Building
 TARGET := riscv64gc-unknown-none-elf
-MODE := release
+MODE := debug
 KERNEL_ELF := target/$(TARGET)/$(MODE)/os
 KERNEL_BIN := $(KERNEL_ELF).bin
 DISASM_TMP := target/$(TARGET)/$(MODE)/asm
@@ -13,7 +13,7 @@ endif
 # BOARD
 BOARD ?= qemu
 SBI ?= rustsbi
-BOOTLOADER := ../bootloader/$(SBI)-$(BOARD).bin
+BOOTLOADER := bootloader/loader.bin
 K210_BOOTLOADER_SIZE := 131072
 
 # KERNEL ENTRY
@@ -54,9 +54,7 @@ $(KERNEL_BIN): kernel
 
 kernel:
 	@echo Platform: $(BOARD)
-	@cp src/linker-$(BOARD).ld src/linker.ld
 	@cargo build $(MODE_ARG)
-	@rm src/linker.ld
 
 clean:
 	@cargo clean
